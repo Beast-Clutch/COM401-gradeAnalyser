@@ -1,0 +1,8 @@
+Rough Notes
+Functions for each section of the programm
+    tkinter function - User interface
+    File management file
+        File Input function
+        File Analysis Function
+    Database stuff???
+
