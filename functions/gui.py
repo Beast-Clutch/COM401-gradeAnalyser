@@ -1,5 +1,6 @@
 import tkinter as tk
 import tkinter.ttk as ttk
+from functions.fileIO  import CSVImport, JSONImport
 
 
 # Opening GUI Window with tkinter
@@ -13,17 +14,17 @@ def startGUI():
     #Notebook Tabs - Allows for different pages accessible through a menu at the top.
     notebook = ttk.Notebook(root)
     notebook.grid(row=0, column=0, sticky="nsew")
-    f1 = ttk.Frame(notebook)
-    f2 = ttk.Frame(notebook)
-    f3 = ttk.Frame(notebook)
-    notebook.add(f1, text="Grade Input")
-    notebook.add(f2, text="Grade Database")
-    notebook.add(f3, text="Grade Analysis")
+    f_input = ttk.Frame(notebook)
+    f_db = ttk.Frame(notebook)
+    f_analysis = ttk.Frame(notebook)
+    notebook.add(f_input, text="Grade Input")
+    notebook.add(f_db, text="Grade Statistics")
+    notebook.add(f_analysis, text="Grade Graphs")
 
+    ttk.Label(f_input, text="Tab 1: Grade Input").pack(anchor="w")
+    ttk.Label(f_db, text="Tab 2: Grade Statistics").pack(anchor="w")
+    ttk.Label(f_analysis, text="Tab 3: Grade Graphs").pack(anchor="w")
 
-    ttk.Label(f1, text="Tab 1: Grade Input").pack(anchor="w")
-    ttk.Label(f2, text="Tab 2: Grade Database").pack(anchor="w")
-    ttk.Label(f3, text="Tab 3: Grade Analysis").pack(anchor="w")
 
 
 
