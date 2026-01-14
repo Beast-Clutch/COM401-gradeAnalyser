@@ -1,6 +1,6 @@
 import pandas as pd
 
-# i love big cockn data and i cannot lie
+
 Expected_Columns = [
     "student_id",
     "first_name",
@@ -18,7 +18,7 @@ def _validate_columns(df: pd.columns) -> bool:
 
 ## Coerce columns to expected types, returning a new DataFrame for database importing
 def _coerce_types(df: pd.DataFrame) -> pd.DataFrame:
-    out = df.lc[:, Expected_Columns].copy()
+    out = df.loc[:, Expected_Columns].copy()
     # IDs and textual fields -> pandas' string dtype (nullable)
     out["student_id"] = out["student_id"].astype("string")
     for col in ("first_name", "last_name", "email", "country"):
