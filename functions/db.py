@@ -74,12 +74,26 @@ def insert_dataframe(df: pd.DataFrame, db_path: Optional[Path] = None) -> int:
     conn.close()
     return inserted
 
+def delete_grade(record_id: int, db_path: Optional[Path] = None) -> int:
+    """Delete a row by its primary key id.
+
+    Returns the number of rows deleted (0 if not found, 1 if deleted).
+    """
+    conn = _get_conn(db_path)
+    try:
+        with conn:
+            cur = conn.execute(f"DELETE FROM {_TABLE_NAME} WHERE id = ?", (record_id,))
+            # cursor.rowcount should reflect rows affected for DELETE
+            deleted = cur.rowcount
+    finally:
+        conn.close()
+    return deleted
 
 def fetch_all(db_path: Optional[Path] = None) -> pd.DataFrame:
     conn = _get_conn(db_path)
     try:
         cols_sql = ", ".join(Expected_Columns)
-        df = pd.read_sql_query(f"SELECT {cols_sql} FROM {_TABLE_NAME}", conn)
+        df = pd.read_sql_query(f"SELECT * FROM {_TABLE_NAME}", conn)
     finally:
         conn.close()
     return df

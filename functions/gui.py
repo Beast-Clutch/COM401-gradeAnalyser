@@ -90,6 +90,43 @@ def startGUI():
     btn_add = ttk.Button(top_frame, text="Add Row", command=on_add_row)
     btn_add.grid(row=1, column=len(Expected_Columns), padx=8)
 
+    # --- New Delete-by-ID controls (placed under Add Row) ---
+    # We'll create a small frame below the Add Row button to accept an ID and delete it.
+    delete_frame = ttk.Frame(top_frame)
+    delete_frame.grid(row=2, column=0, columnspan=len(Expected_Columns) + 1, pady=(8, 0), sticky="w")
+
+    ttk.Label(delete_frame, text="Delete by ID:").grid(row=0, column=0, sticky="w", padx=(0, 6))
+    delete_id_var = tk.StringVar()
+    delete_id_entry = ttk.Entry(delete_frame, textvariable=delete_id_var, width=12)
+    delete_id_entry.grid(row=0, column=1, sticky="w")
+
+    def on_delete_by_id():
+        val = delete_id_var.get().strip()
+        if not val:
+            messagebox.showwarning("Validation", "Enter an ID to delete.")
+            return
+        try:
+            rid = int(val)
+        except ValueError:
+            messagebox.showwarning("Validation", "ID must be an integer.")
+            return
+        if not messagebox.askyesno("Confirm", f"Delete record with id={rid}? This cannot be undone."):
+            return
+        try:
+            deleted = db.delete_grade(rid)
+            if deleted:
+                messagebox.showinfo("Deleted", f"Record id={rid} deleted.")
+                delete_id_var.set("")
+                refresh_table()
+            else:
+                messagebox.showinfo("Not found", f"No record with id={rid} was found.")
+        except Exception as e:
+            messagebox.showerror("DB Error", f"Could not delete record: {e}")
+
+    btn_delete = ttk.Button(delete_frame, text="Delete", command=on_delete_by_id)
+    btn_delete.grid(row=0, column=2, padx=(8, 0))
+    # --- End Delete controls ---
+
     mid_frame = ttk.Frame(f_input, padding=6)
     mid_frame.pack(fill="x", anchor="n", pady=(6, 0))
 
@@ -176,11 +213,13 @@ def startGUI():
     hsb.pack(side="bottom", fill="x")
 
     def refresh_table():
+        temp_Expected_Columns = Expected_Columns.copy()
+        temp_Expected_Columns.insert(0, "id")
         try:
             df = db.fetch_all()
             # keep only expected order if present
             if df is not None and not df.empty:
-                cols_in_df = [c for c in Expected_Columns if c in df.columns]
+                cols_in_df = [c for c in temp_Expected_Columns if c in df.columns]
                 if cols_in_df:
                     df = df.loc[:, cols_in_df]
             df_to_treeview(tree, df)
