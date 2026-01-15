@@ -1,7 +1,7 @@
 import tkinter as tk
 import tkinter.ttk as ttk
 from tkinter import filedialog, messagebox
-from typing import Dict, Any, Optional
+from typing import Dict, Optional
 import pandas as pd
 
 from functions.fileIO import CSVImport, JSONImport, Expected_Columns
@@ -28,7 +28,7 @@ def startGUI():
     root = tk.Tk()
     #Window Title
     root.title("Student Grade Analyser")
-    root.geometry("1280x720")
+    root.geometry("1920x1080")
     root.rowconfigure(0, weight=1)
     root.columnconfigure(0, weight=1)
     #Notebook Tabs - Allows for different pages accessible through a menu at the top.
