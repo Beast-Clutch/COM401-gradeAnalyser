@@ -75,10 +75,6 @@ def insert_dataframe(df: pd.DataFrame, db_path: Optional[Path] = None) -> int:
     return inserted
 
 def delete_grade(record_id: int, db_path: Optional[Path] = None) -> int:
-    """Delete a row by its primary key id.
-
-    Returns the number of rows deleted (0 if not found, 1 if deleted).
-    """
     conn = _get_conn(db_path)
     try:
         with conn:

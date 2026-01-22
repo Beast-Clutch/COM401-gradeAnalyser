@@ -6,6 +6,8 @@ import pandas as pd
 
 from functions.fileIO import CSVImport, JSONImport, Expected_Columns
 import functions.db as db
+import functions.calculations as calc
+from functions.calculations import STAT_ITEMS
 
 def df_to_treeview(tree: ttk.Treeview, df: pd.DataFrame | None):
     for iid in tree.get_children():
@@ -35,14 +37,14 @@ def startGUI():
     notebook = ttk.Notebook(root)
     notebook.grid(row=0, column=0, sticky="nsew")
     f_input = ttk.Frame(notebook)
-    f_db = ttk.Frame(notebook)
+    f_stats= ttk.Frame(notebook)
     f_analysis = ttk.Frame(notebook)
     notebook.add(f_input, text="Grade Input")
-    notebook.add(f_db, text="Grade Statistics")
+    notebook.add(f_stats, text="Grade Statistics")
     notebook.add(f_analysis, text="Grade Graphs")
 
     ttk.Label(f_input, text="Tab 1: Grade Input").pack(anchor="w")
-    ttk.Label(f_db, text="Tab 2: Grade Statistics").pack(anchor="w")
+    ttk.Label(f_stats, text="Tab 2: Grade Statistics").pack(anchor="w")
     ttk.Label(f_analysis, text="Tab 3: Grade Graphs").pack(anchor="w")
 
     top_frame = ttk.Frame(f_input, padding=6)
@@ -90,8 +92,6 @@ def startGUI():
     btn_add = ttk.Button(top_frame, text="Add Row", command=on_add_row)
     btn_add.grid(row=1, column=len(Expected_Columns), padx=8)
 
-    # --- New Delete-by-ID controls (placed under Add Row) ---
-    # We'll create a small frame below the Add Row button to accept an ID and delete it.
     delete_frame = ttk.Frame(top_frame)
     delete_frame.grid(row=2, column=0, columnspan=len(Expected_Columns) + 1, pady=(8, 0), sticky="w")
 
@@ -235,6 +235,39 @@ def startGUI():
     refresh_table()
     refresh_preview_table()
 
+    stats_frame = ttk.Frame(f_stats, padding=8)
+    stats_frame.pack(fill="x", padx=6, pady=(6, 0))
+    btn_refreshstats = ttk.Button(f_stats, text="Refresh Stats")
+    btn_refreshstats.pack(padx=6, pady=6, anchor="ne")
+    stats_widgets = {}
+    for i, (key, label_text, _) in enumerate(STAT_ITEMS):
+        lbl = ttk.Label(stats_frame, text=label_text + ":")
+        lbl.grid(row=i, column=0, sticky="w", padx=(0, 8), pady=2)
+        val = ttk.Label(stats_frame, text="—")
+        val.grid(row=i, column=1, sticky="w", pady=2)
+        stats_widgets[key] = val
 
+    def refresh_stats():
+        try:
+            stats = calc.fetch_and_compute()
+            if not stats:
+                for w in stats_widgets.values():
+                    w.config(text="—")
+                return
+
+            def fmt(v, is_pct=False):
+                if v is None:
+                    return "—"
+                if isinstance(v, float):
+                    return f"{v:.2f}" + ("%" if is_pct else "")
+                return str(v)
+
+            for key, _, is_pct in STAT_ITEMS:
+                stats_widgets[key].config(text=fmt(stats.get(key), is_pct=is_pct))
+        except Exception:
+            for w in stats_widgets.values():
+                w.config(text="err")
+
+    btn_refreshstats.config(command=refresh_stats)
     root.mainloop()
 
