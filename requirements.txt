@@ -1,0 +1,13 @@
+pandas~=2.3.3
+pip~=25.3
+pillow~=12.1.0
+brotli~=1.2.0
+PyYAML~=6.0.3
+minijinja~=2.14.0
+page~=0.3
+markdown2~=2.5.4
+MarkupSafe~=2.0.1
+numpy~=2.4.1
+pytz~=2025.2
+python-dateutil~=2.9.0.post0
+six~=1.17.0
