@@ -13,7 +13,7 @@ Expected_Columns = [
     "grade"
 ]
 
-def _validate_columns(df: pd.columns) -> bool:
+def _validate_columns(df: pd.DataFrame) -> bool:
     return set(Expected_Columns).issubset(set(df.columns))
 
 ## Coerce columns to expected types, returning a new DataFrame for database importing
