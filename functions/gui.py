@@ -76,6 +76,7 @@ def startGUI():
                         row[numc] = float(v)
                 except Exception:
                     row[numc] = None
+        print(row)
         return row
 
     def on_add_row():
