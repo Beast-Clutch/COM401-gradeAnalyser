@@ -3,11 +3,14 @@ import tkinter.ttk as ttk
 from tkinter import filedialog, messagebox
 from typing import Dict, Optional
 import pandas as pd
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import matplotlib.pyplot as plt
 
 from functions.fileIO import CSVImport, JSONImport, Expected_Columns
 import functions.db as db
 import functions.calculations as calc
 from functions.calculations import STAT_ITEMS
+import functions.graphs as graphs
 
 def df_to_treeview(tree: ttk.Treeview, df: pd.DataFrame | None):
     for iid in tree.get_children():
@@ -269,5 +272,101 @@ def startGUI():
                 w.config(text="err")
 
     btn_refreshstats.config(command=refresh_stats)
+    refresh_stats()
+
+    analysis_frame = ttk.Frame(f_analysis, padding=8)
+    analysis_frame.pack(fill="both", expand=True)
+
+    if graphs is None:
+        ttk.Label(analysis_frame, text="Graphs module not available.").pack(padx=6, pady=6)
+    else:
+        # discover available plot functions in functions.graphs (those starting with "plot_")
+        plot_funcs = [n for n in dir(graphs) if n.startswith("plot_")]
+        plot_names = [n.replace("plot_", "").replace("_", " ").title() for n in plot_funcs]
+
+        ctrl_frame = ttk.Frame(analysis_frame)
+        ctrl_frame.pack(fill="x", anchor="n", padx=6, pady=(0, 6))
+
+        ttk.Label(ctrl_frame, text="Select graph:").pack(side="left", padx=(0, 6))
+        combo = ttk.Combobox(ctrl_frame, values=plot_names, state="readonly", width=36)
+        if plot_names:
+            combo.current(0)
+        combo.pack(side="left", padx=(0, 6))
+
+        btn_refresh_graph = ttk.Button(ctrl_frame, text="Refresh Graph")
+        btn_refresh_graph.pack(side="left")
+
+        canvas_frame = ttk.Frame(analysis_frame)
+        canvas_frame.pack(fill="both", expand=True, padx=6, pady=6)
+
+        canvas_state = {"canvas": None, "fig": None}
+
+        def _clear_canvas():
+            if canvas_state["canvas"]:
+                canvas_state["canvas"].get_tk_widget().destroy()
+                canvas_state["canvas"] = None
+                canvas_state["fig"] = None
+
+        def render_graph():
+            if not plot_funcs:
+                messagebox.showinfo("No graphs", "No graph functions found in functions.graphs.")
+                return
+            sel_idx = combo.current()
+            if sel_idx < 0:
+                messagebox.showwarning("Select", "Choose a graph to display.")
+                return
+            func_name = plot_funcs[sel_idx]
+            func = getattr(graphs, func_name, None)
+            if func is None:
+                messagebox.showerror("Graph Error", f"Graph function {func_name} missing.")
+                return
+            try:
+                df = db.fetch_all()
+                # call the plot function; allow it to return Figure or Axes
+                result = func(df)
+                if result is None:
+                    messagebox.showinfo("No data", "Graph produced no output.")
+                    return
+
+                # normalize to Figure
+                fig = None
+                # if returned an Axes object
+                if hasattr(result, "figure"):
+                    fig = result.figure
+                # if returned a Figure directly
+                elif isinstance(result, plt.Figure):
+                    fig = result
+                # if returned (fig, ax) tuple
+                elif isinstance(result, tuple) and len(result) and isinstance(result[0], plt.Figure):
+                    fig = result[0]
+                else:
+                    # fallback: try to create a figure and let function draw on it if it accepts an axes param
+                    fig, ax = plt.subplots(figsize=(6, 4))
+                    try:
+                        # some graph functions may accept (df, ax)
+                        func(df, ax)
+                    except TypeError:
+                        # give up if signature is incompatible
+                        plt.close(fig)
+                        messagebox.showerror("Graph Error",
+                                             "Graph function did not return a Figure or draw onto provided Axes.")
+                        return
+
+                _clear_canvas()
+                canvas = FigureCanvasTkAgg(fig, master=canvas_frame)
+                canvas.draw()
+                canvas.get_tk_widget().pack(fill="both", expand=True)
+                canvas_state["canvas"] = canvas
+                canvas_state["fig"] = fig
+            except Exception as e:
+                messagebox.showerror("Graph Error", f"Could not render graph: {e}")
+
+        btn_refresh_graph.config(command=render_graph)
+
+        if plot_funcs:
+            render_graph()
+
+
+
     root.mainloop()
 
